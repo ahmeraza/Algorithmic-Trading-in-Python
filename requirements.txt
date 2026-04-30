@@ -1,0 +1,16 @@
+# Core backtesting and data
+bt==0.2.10
+yfinance==0.2.40
+
+# Data manipulation
+pandas==2.2.2
+numpy==1.26.4
+
+# Visualisation
+matplotlib==3.9.0
+seaborn==0.13.2
+
+# Portfolio optimisation (used in Efficient Frontier section)
+# If installation fails, upgrade pip first: pip install --upgrade pip
+# Then: pip install PyPortfolioOpt --upgrade
+PyPortfolioOpt==1.5.5
