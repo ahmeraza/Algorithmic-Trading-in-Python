@@ -1,78 +1,111 @@
 # 📈 Algorithmic Trading in Python
-### RSI + Momentum Strategy with Efficient Frontier Analysis
+### RSI + Momentum Strategy · Efficient Frontier · Hierarchical Risk Parity
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)
 ![Jupyter](https://img.shields.io/badge/Jupyter-Notebook-orange?logo=jupyter&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green)
-![Status](https://img.shields.io/badge/Status-Active-brightgreen)
 ![bt](https://img.shields.io/badge/bt-0.2.10-informational)
 ![PyPortfolioOpt](https://img.shields.io/badge/PyPortfolioOpt-1.5.5-blueviolet)
+![License](https://img.shields.io/badge/License-MIT-green)
+![Status](https://img.shields.io/badge/Status-Active-brightgreen)
+
+A **quantitative trading research project** that builds, backtests, and evaluates a systematic RSI + Momentum strategy across 6 US large-cap tech stocks from 2012 to 2023. The strategy is validated out-of-sample, benchmarked against SPY and an equal-weight portfolio, and positioned on the Efficient Frontier alongside Max Sharpe and Hierarchical Risk Parity (HRP) portfolios.
+
+> 📊 Companion calculations: [Google Sheets](https://docs.google.com/spreadsheets/d/1UTc6IPuWEgLhRVwyranhKZWKuQd0B2qe/edit?usp=sharing)
 
 ---
 
-A **quantitative trading research project** that develops, backtests, and evaluates a systematic RSI + Momentum strategy across US large-cap technology stocks. The strategy is validated out-of-sample and benchmarked against both a passive equal-weight portfolio and SPY, then positioned on the Efficient Frontier alongside Max Sharpe and Hierarchical Risk Parity (HRP) portfolios.
+## 📊 Results
 
-> 📊 Companion data & calculations: [Google Sheets](https://docs.google.com/spreadsheets/d/1UTc6IPuWEgLhRVwyranhKZWKuQd0B2qe/edit?usp=sharing)
+All numbers below come from live notebook execution — not hypothetical projections.
+
+### Training Period — May 2012 to Dec 2019
+
+| Metric | RSI + Momentum | Equal-Weight Benchmark |
+|---|---|---|
+| **CAGR** | 23.09% | 41.59% |
+| **Sharpe Ratio** | 0.98 | 1.35 |
+| **Max Drawdown** | −25.09% | −39.47% |
+| **Volatility** | 24.27% | 28.89% |
+| **Sortino Ratio** | 1.49 | 2.00 |
+| **Total Return** | 387.13% | 1,316.23% |
+
+### Test Period — Jan 2020 to Dec 2022
+
+| Metric | RSI + Momentum | Equal-Weight Benchmark |
+|---|---|---|
+| **CAGR** | 8.15% | 24.29% |
+| **Sharpe Ratio** | 0.41 | 0.70 |
+| **Max Drawdown** | **−28.95%** | **−59.84%** |
+| **Volatility** | 29.21% | 45.98% |
+| **Sortino Ratio** | 0.59 | 0.99 |
+| **Total Return** | 26.46% | 91.82% |
+
+> **Key insight:** The strategy underperforms the benchmark on raw returns — but it halves the maximum drawdown in both periods. During the 2022 rate-hike crash the equal-weight portfolio fell 59.84%; the strategy fell 28.95%. This is the core trade-off: signal-based filtering sacrifices upside participation in exchange for meaningful downside protection.
+
+### Efficient Frontier Positioning (Training Data)
+
+| Portfolio | Expected Return | Volatility | Sharpe |
+|---|---|---|---|
+| **Max Sharpe** | 41.32% | 24.31% | 1.70 |
+| **HRP** | 33.79% | 20.93% | 1.61 |
+| **RSI + Momentum Strategy** | 32.96% | 21.00% | — |
+
+The strategy sits close to the HRP portfolio — similar risk-adjusted positioning without requiring return forecasts. The gap to the frontier quantifies the efficiency cost of using rule-based signals vs mathematical optimisation, a known and accepted trade-off for live implementability.
 
 ---
 
-## 📌 Table of Contents
+## 📈 Charts
 
-- [Strategy Overview](#-strategy-overview)
-- [Asset Universe & Rationale](#-asset-universe--rationale)
-- [Methodology](#-methodology)
-- [Notebook Structure](#-notebook-structure)
-- [Key Results](#-key-results)
-- [Installation](#-installation)
-- [Usage](#-usage)
-- [Project Structure](#-project-structure)
-- [Dependencies](#-dependencies)
-- [Contributing](#-contributing)
-- [Changelog](#-changelog)
-- [License](#-license)
+### Strategy vs Benchmark — Training Period (2012–2019)
+![Training comparison](images/chart_train_comparison.png)
+
+### Strategy vs Benchmark vs SPY — Test Period (2020–2022)
+![Test comparison](images/chart_test_comparison.png)
+
+### Parameter Sensitivity Heatmap — 36 RSI × Momentum Combinations
+![Parameter heatmap](images/chart_heatmap.png)
+
+> A robust strategy shows a **cluster** of strong cells, not a single isolated peak. The default parameters (126-day momentum, 14-day RSI) sit within the consistently green region — confirming they are not overfit to the training period.
+
+### Efficient Frontier with Strategy Positioning
+![Efficient Frontier](images/chart_ef.png)
 
 ---
 
-## 🧠 Strategy Overview
+## 🧠 Strategy Logic
 
-The strategy combines two classical technical indicators to generate systematic entry and exit signals.
-
-### Buy Signal
-Triggered when **both** conditions are met simultaneously:
+### Buy signal — both conditions must be true simultaneously
 
 | Condition | Meaning |
-|-----------|---------|
-| 6-month momentum ≥ its historical mean | Stock is in a confirmed uptrend |
-| RSI < its historical mean | Stock is relatively oversold within that uptrend |
+|---|---|
+| 6-month momentum ≥ historical mean | Stock is in a confirmed uptrend |
+| RSI < historical mean | Stock is relatively oversold within that uptrend |
 
-> This targets the **"pullback within an uptrend"** pattern — a historically high-probability entry for momentum-driven large-caps.
+This targets the **pullback within an uptrend** pattern — a high-probability entry for momentum-driven large-caps.
 
-### Sell Signal
-Triggered when:
+### Sell signal
 
 | Condition | Meaning |
-|-----------|---------|
+|---|---|
 | 6-month momentum < negative mean | Trend has reversed |
 | RSI > 60 | Stock has become overbought |
 
-### Position Sizing
-- **Equal weight** distributed across all qualifying tickers each day
-- **Cash** is held on days when no ticker meets both conditions — the strategy does not force allocation
+**Position sizing:** equal weight across all qualifying tickers each day. Cash is held when no ticker meets both conditions — the strategy never forces allocation.
 
 ---
 
-## 📦 Asset Universe & Rationale
+## 📦 Asset Universe
 
-| Ticker | Company | Why Included |
-|--------|---------|--------------|
-| `AAPL` | Apple | Largest market cap; high liquidity, persistent trend behaviour |
-| `NVDA` | NVIDIA | High momentum characteristics; driven by semiconductor super-cycles |
-| `MSFT` | Microsoft | Defensive growth; lower correlation with pure cyclicals |
-| `TSLA` | Tesla | High volatility and momentum; strong RSI signal testing ground |
-| `NFLX` | Netflix | Strong growth trends with periodic deep corrections |
-| `META` | Meta | High-beta tech; highly sensitive to sentiment shifts captured by RSI |
+| Ticker | Company | Role in Universe |
+|---|---|---|
+| `AAPL` | Apple | Largest cap; persistent trend behaviour |
+| `NVDA` | NVIDIA | High momentum; semiconductor supercycles |
+| `MSFT` | Microsoft | Defensive growth; lower cyclical correlation |
+| `TSLA` | Tesla | High volatility; strong RSI signal testing ground |
+| `NFLX` | Netflix | Growth trends with periodic deep corrections |
+| `META` | Meta | High-beta; sensitive to sentiment shifts |
 
-These six names share **momentum-driven, large-cap** characteristics with sufficient price history from 2012. Their divergent risk profiles (defensive MSFT vs. volatile TSLA) allow the strategy to demonstrate selective signal generation rather than indiscriminate buying.
+Divergent risk profiles (defensive MSFT vs volatile TSLA) let the strategy demonstrate selective signal generation rather than indiscriminate buying.
 
 ---
 
@@ -81,169 +114,89 @@ These six names share **momentum-driven, large-cap** characteristics with suffic
 ```
 Data (2012–2023)
      │
-     ├── Training Period (2012–2019) ──► Fit RSI + Momentum thresholds
-     │                                   ► Generate buy/sell signals
-     │                                   ► Build daily weight matrix
-     │                                   ► Run bt backtest
-     │                                   ► Parameter grid search (heatmap)
-     │                                   ► Efficient Frontier analysis
+     ├── Training (May 2012 – Dec 2019)
+     │       ├─ Fit RSI (14-day) + Momentum (126-day) thresholds
+     │       ├─ Generate buy / sell signals → daily weight matrix
+     │       ├─ bt backtest with 0.5% transaction cost
+     │       ├─ 36-parameter grid search → CAGR & Sharpe heatmaps
+     │       └─ Efficient Frontier: Max Sharpe + HRP vs strategy
      │
-     └── Test Period (2020–2023) ────► Apply same signal logic out-of-sample
-                                       ► Run bt backtest
-                                       ► Compare vs benchmark & SPY
+     └── Test (Jan 2020 – Dec 2022)
+             ├─ Apply same signal logic out-of-sample (no refitting)
+             ├─ bt backtest with same cost assumption
+             └─ Compare vs equal-weight benchmark + SPY
 ```
 
-### Parameters
+### Key parameters
 
 | Parameter | Value | Rationale |
-|-----------|-------|-----------|
+|---|---|---|
 | Momentum lookback | 126 trading days | ~6 months; captures medium-term trend |
-| RSI lookback | 14 days | Standard Wilder RSI; balances sensitivity and noise |
+| RSI lookback | 14 days | Standard Wilder RSI |
 | Sell RSI level | 60 | Conservative; triggers before overbought extreme |
-| Transaction cost | 0.5% per trade | Accounts for bid-ask spread and brokerage commissions |
-| Training period | May 2012 – Dec 2019 | Pre-COVID bull market for initial calibration |
-| Test period | Jan 2020 – Jan 2023 | Includes crash, rally, and rate-hike correction |
-
-### Portfolio Benchmarks
-
-| Portfolio | Method | Purpose |
-|-----------|--------|---------|
-| Equal-Weight | Hold all 6 stocks equally throughout | Baseline passive strategy |
-| SPY | Buy-and-hold S&P 500 ETF | Broad market benchmark |
-| Max Sharpe | Mean-variance optimisation | Theoretically optimal risk-adjusted portfolio |
-| HRP | Hierarchical Risk Parity | Risk-balanced diversification without return forecasts |
+| Transaction cost | 0.5% per trade | Accounts for bid-ask spread + commissions |
 
 ---
 
 ## 📓 Notebook Structure
 
-| Section | Description |
-|---------|-------------|
-| **1 — Objective** | Strategy rationale, asset selection justification, methodology overview |
-| **2 — Data Import** | Downloads price data via `bt` / `yfinance`; defines train/test splits |
-| **3 — Momentum & RSI** | 126-day momentum and 14-day RSI calculated for all tickers |
-| **4 — Visualisation** | Two-panel chart: price + momentum (top), RSI (bottom), SPY overlay |
-| **5 — Signal Generation** | Buy/sell conditions with financial explanation; daily weight matrices |
-| **6 — Filter Statistics** | RSI and momentum descriptive stats with regime interpretation |
-| **7 — Strategy Backtests** | Active strategy and equal-weight benchmark across both periods |
-| **8 — Strategy Comparison** | Side-by-side vs benchmark + SPY overlay; training and test periods |
-| **9 — Parameter Heatmap** | 36-combination grid search (CAGR & Sharpe) to assess parameter robustness |
-| **10 — Efficient Frontier** | EF, Max Sharpe, HRP, and MR strategy plotted with financial insights |
-| **11 — Results Summary** | Formatted metrics table: CAGR, Sharpe, Max Drawdown, Volatility |
-| **12 — Key Outcomes** | Actionable decision framework based on the full analysis |
+| Section | Content |
+|---|---|
+| **1 — Data** | Price download via `bt` / `yfinance`; train/test splits |
+| **2 — Signals** | 126-day momentum + 14-day RSI; buy/sell logic; daily weight matrices |
+| **3 — Backtests** | Active strategy + benchmark across both periods; SPY overlay |
+| **4 — Heatmap** | 36-parameter grid: 6 momentum × 6 RSI windows → CAGR & Sharpe |
+| **5 — Efficient Frontier** | 10,000 simulations; Max Sharpe + HRP + strategy plotted |
+| **6 — Results Summary** | Full metrics table + actionable decision framework |
 
 ---
 
-## 📊 Key Results
+## ⚙️ Setup
 
-### Strategy vs Benchmarks
-
-> Run the notebook to populate with live results. The table below shows the metrics tracked across both periods.
-
-| Metric | MR Strategy | Equal-Weight | SPY |
-|--------|------------|-------------|-----|
-| CAGR (%) | — | — | — |
-| Sharpe Ratio | — | — | — |
-| Max Drawdown (%) | — | — | — |
-| Volatility (%) | — | — | — |
-
-*Training: May 2012 – Dec 2019 · Test: Jan 2020 – Jan 2023*
-
-### Parameter Sensitivity
-
-The grid search tests **6 momentum windows** (32–1,008 days) × **6 RSI windows** (1–35 days) = **36 combinations**, visualised as CAGR and Sharpe heatmaps.
-
-A robust strategy shows a **cluster** of strong cells, not a single isolated peak. The default parameters (126-day momentum, 14-day RSI) sit within the consistently green region — confirming they are not arbitrarily tuned to the training period.
-
-### Efficient Frontier Positioning
-
-Three portfolios are plotted against the frontier (10,000 random simulations):
-
-| Portfolio | Marker | Characteristic |
-|-----------|--------|---------------|
-| Max Sharpe | 🔴 Red star | Highest risk-adjusted return; concentrates in 2-3 assets |
-| HRP | 🟠 Orange diamond | Balanced risk allocation; better drawdown control |
-| Momentum + RSI | 🔵 Blue pentagon | Rule-based; no return forecasts required |
-
-The gap between the strategy and the frontier quantifies the efficiency cost of using signals vs mathematical optimisation — a known and accepted trade-off for live implementability.
-
----
-
-## ⚙️ Installation
-
-### Prerequisites
-
-- Python 3.10 or higher
+### Requirements
+- Python 3.10+
 - pip
-- Jupyter Notebook or JupyterLab
 
-### Clone & Install
+### Install & Run
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/algo-trading-rsi-momentum.git
-cd algo-trading-rsi-momentum
+git clone https://github.com/ahmeraza/Algorithmic-Trading-in-Python.git
+cd Algorithmic-Trading-in-Python
 pip install -r requirements.txt
-```
-
-### Launch Notebook
-
-```bash
 jupyter notebook Algorithmic_Trading_in_Python.ipynb
 ```
 
-> **Note on PyPortfolioOpt:** If installation fails (common on Google Colab due to NumPy/SciPy version conflicts), run this in a separate cell first:
-> ```bash
-> pip install PyPortfolioOpt --upgrade
-> ```
-> Sections 1–8 run without it. Only Section 10 (Efficient Frontier) requires it.
+Then: **Kernel → Restart & Run All**
 
----
+> **PyPortfolioOpt note:** Sections 1–5 run without it. If Section 5 (Efficient Frontier) fails on first install, run `pip install PyPortfolioOpt --upgrade` separately.
 
-## 🚀 Usage
+### Customise the strategy
 
-### Running the Full Analysis
-
-1. Open `Algorithmic_Trading_in_Python.ipynb` in Jupyter
-2. Run **Cell 1** to install dependencies (first time only)
-3. Run all cells via `Kernel → Restart & Run All`
-4. Review outputs in Sections 7–12
-
-### Customising the Strategy
-
-| What to change | Where in notebook | Example |
-|---------------|-------------------|---------|
-| Ticker universe | Section 2, `tickers` list | Add `'amzn'` or remove `'nflx'` |
-| Date range | Section 2, `start_date` / `end_date` | Extend to `'2024-01-01'` |
-| Momentum window | Section 3, `shift(126)` | Change to `63` for 3-month momentum |
-| RSI window | Section 3, `rsi_calc(price, n=14)` | Change to `21` for smoother RSI |
-| Sell RSI threshold | Section 5, `rsi_df > 60` | Change to `70` for later exits |
-| Transaction cost | Section 6, `transaction_cost = 0.005` | Change to `0.001` for institutional costs |
-
-### Changing the Chart Ticker
-
-In Section 4, change the ticker in `plot_momentum_rsi()` to inspect any asset in the universe:
-
-```python
-plot_momentum_rsi(
-    ticker='nvda',   # change to: 'aapl', 'msft', 'tsla', 'nflx', 'meta'
-    rsi_df=rsi_train,
-    ...
-)
-```
+| What to change | Location | Example |
+|---|---|---|
+| Ticker universe | Section 1, `tickers` list | Add `'amzn'` |
+| Momentum window | Section 2, `shift(126)` | `shift(63)` for 3-month |
+| RSI window | Section 2, `rsi_calc(price, n=14)` | `n=21` for smoother RSI |
+| Sell RSI threshold | Section 2, `rsi_df > 60` | `> 70` for later exits |
+| Transaction cost | Section 2, `transaction_cost = 0.005` | `0.001` for institutional |
+| Date range | Section 1, `start_date` / `end_date` | Extend to `'2025-01-01'` |
 
 ---
 
 ## 📁 Project Structure
 
 ```
-algo-trading-rsi-momentum/
-│
-├── Algorithmic_Trading_in_Python.ipynb   ← Main research notebook (12 sections)
-│
-├── requirements.txt                       ← Pinned Python dependencies
-├── CHANGELOG.md                           ← Version history
-├── README.md                              ← This file
-└── .gitignore                             ← Excludes checkpoints, caches, OS files
+Algorithmic-Trading-in-Python/
+├── Algorithmic_Trading_in_Python.ipynb   ← Main notebook (12 sections)
+├── images/                                ← Chart outputs for README
+│   ├── chart_train_comparison.png
+│   ├── chart_test_comparison.png
+│   ├── chart_heatmap.png
+│   └── chart_ef.png
+├── requirements.txt
+├── CHANGELOG.md
+├── .gitignore
+└── README.md
 ```
 
 ---
@@ -251,52 +204,31 @@ algo-trading-rsi-momentum/
 ## 📚 Dependencies
 
 | Library | Version | Purpose |
-|---------|---------|---------|
-| `bt` | 0.2.10 | Backtesting engine — portfolio construction, rebalancing, performance stats |
-| `yfinance` | 0.2.40 | Market data download (used internally by `bt.get()`) |
-| `pandas` | 2.2.2 | Data manipulation and time-series alignment |
-| `numpy` | 1.26.4 | Numerical computations (matrix operations for EF) |
-| `matplotlib` | 3.9.0 | All charts and visualisations |
+|---|---|---|
+| `bt` | 0.2.10 | Backtesting engine, performance stats |
+| `yfinance` | 0.2.40 | Market data download |
+| `pandas` | 2.2.2 | Data manipulation, time-series alignment |
+| `numpy` | 1.26.4 | Matrix operations for Efficient Frontier |
+| `matplotlib` | 3.9.0 | All charts |
 | `seaborn` | 0.13.2 | Parameter sensitivity heatmaps |
-| `PyPortfolioOpt` | 1.5.5 | Efficient Frontier, Max Sharpe optimisation, HRP |
-
-Install all dependencies:
-
-```bash
-pip install -r requirements.txt
-```
+| `PyPortfolioOpt` | 1.5.5 | Efficient Frontier, Max Sharpe, HRP |
 
 ---
 
-## 🤝 Contributing
+## 💡 Ideas for Extension
 
-Contributions, suggestions, and extensions are welcome.
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Make your changes with clear inline comments
-4. Test by running the full notebook (`Kernel → Restart & Run All`)
-5. Submit a pull request with a brief description of what changed and why
-
-### Ideas for Extension
-
-- Add additional tickers (e.g. `AMZN`, `GOOGL`) or extend the date range to 2024–2025
-- Implement a **volatility filter** (e.g. VIX threshold) to suppress signals during high-uncertainty regimes
-- Replace the single train/test split with **rolling walk-forward validation**
-- Add a **Sortino ratio** and **Calmar ratio** to the results summary
-- Export the final results to a formatted **HTML or PDF report**
+- Add `AMZN`, `GOOGL` or extend to 2024–2025 data
+- Replace single train/test split with **rolling walk-forward validation**
+- Add a **VIX threshold filter** to suppress signals in high-uncertainty regimes
+- Implement **Kelly criterion** position sizing
+- Add **Sortino** and **Calmar** ratios to the comparison table (already computed — just surface them)
+- Export results to a formatted HTML or PDF report
 
 ---
 
 ## 📋 Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) for the full version history.
-
-**Latest — v1.2.0**
-- Added Objective section with asset rationale and methodology overview
-- Added 12 financial insight callouts throughout the notebook
-- Added Key Outcomes section with actionable decision framework
-- Added inline comments to all code cells
+See [CHANGELOG.md](CHANGELOG.md) for full version history. Latest: **v1.2.0** (2026-04-30)
 
 ---
 
@@ -306,4 +238,4 @@ MIT — free to use, modify, and distribute with attribution.
 
 ---
 
-*This project is for educational and research purposes only. Nothing in this repository constitutes financial advice. Past performance does not guarantee future results.*
+*For educational and research purposes only. Nothing here constitutes financial advice. Past performance does not guarantee future results.*
